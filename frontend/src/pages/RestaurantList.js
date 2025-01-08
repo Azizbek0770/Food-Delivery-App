@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getRestaurants, setFilters } from '../store/slices/restaurantSlice';
-import RestaurantCard from '../components/restaurants/RestaurantCard';
+import RestaurantCard from '../components/restaurant/RestaurantCard';
 
 const RestaurantList = () => {
   const dispatch = useDispatch();

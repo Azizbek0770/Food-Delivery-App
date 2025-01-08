@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
-import RestaurantCard from '../components/restaurants/RestaurantCard';
-import SearchFilters from '../components/restaurants/SearchFilters';
+import RestaurantCard from '../components/restaurant/RestaurantCard';
+import SearchFilters from '../components/restaurant/SearchFilters';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { toast } from 'react-hot-toast';
 
