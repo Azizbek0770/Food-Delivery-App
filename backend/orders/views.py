@@ -1,54 +1,61 @@
-from rest_framework.views import APIView
+from rest_framework import viewsets, status, permissions
+from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateAPIView
-from .models import Order, OrderItem
-from restaurants.models import Restaurant, MenuItem
-from .serializers import OrderSerializer, OrderItemSerializer
+from core.permissions import IsOrderOwner
+from .models import Order
+from .serializers import OrderSerializer
+from notifications.models import Notification
 
-class OrderListCreateView(ListCreateAPIView):
+class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated]
-
+    permission_classes = [IsOrderOwner]
+    
     def get_queryset(self):
-        if self.request.user.role == 'customer':
-            return Order.objects.filter(customer=self.request.user)
-        elif self.request.user.role == 'restaurant':
-            return Order.objects.filter(restaurant__owner=self.request.user)
-        else:
-            return Order.objects.none()
+        user = self.request.user
+        if user.role == 'customer':
+            return Order.objects.filter(user=user)
+        elif user.role == 'restaurant':
+            return Order.objects.filter(restaurant__owner=user)
+        elif user.role == 'delivery':
+            return Order.objects.filter(delivery__delivery_person__user=user)
+        return Order.objects.none()
 
     def perform_create(self, serializer):
-        restaurant_id = self.request.data.get('restaurant')  # This line is now properly indented
-        restaurant = Restaurant.objects.get(id=restaurant_id)
-        serializer.save(customer=self.request.user, restaurant=restaurant)
-
-class OrderDetailView(RetrieveUpdateAPIView):
-    queryset = Order.objects.all()
-    serializer_class = OrderSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        if self.request.user.role == 'customer':
-            return Order.objects.filter(customer=self.request.user)
-        elif self.request.user.role == 'restaurant':
-            return Order.objects.filter(restaurant__owner=self.request.user)
-        else:
-            return Order.objects.none()
-    
-    def perform_update(self, serializer):
-        order = serializer.save()
-
-        Notification.objects.create(
-            user=order.customer,
-            message=f"Your order status has been updated to {order.status}."
+        order = serializer.save(
+            user=self.request.user,
+            status='pending'
         )
-        send_notification_to_user(order.customer.id, f"Order {order.id} status: {order.status}")
-    
-    def perform_destroy(self, instance):
-        instance.delete()
+        
+        # Create notification for restaurant
         Notification.objects.create(
-            user=instance.customer,
-            message=f"Your order {instance.id} has been deleted."
+            user=order.restaurant.owner,
+            title='New Order',
+            message=f'New order #{order.id} received',
+            notification_type='order_status',
+            order=order
         )
-        send_notification_to_user(instance.customer.id, f"Order {instance.id} has been deleted.")
+
+    @action(detail=True, methods=['post'])
+    def update_status(self, request, pk=None):
+        order = self.get_object()
+        new_status = request.data.get('status')
+        
+        if new_status not in dict(Order.STATUS_CHOICES):
+            return Response(
+                {'error': 'Invalid status'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        order.status = new_status
+        order.save()
+
+        # Create notification for customer
+        Notification.objects.create(
+            user=order.user,
+            title='Order Status Updated',
+            message=f'Your order #{order.id} is now {new_status}',
+            notification_type='order_status',
+            order=order
+        )
+
+        return Response({'status': 'updated'})

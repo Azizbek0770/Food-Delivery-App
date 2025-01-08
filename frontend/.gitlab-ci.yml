@@ -1,0 +1,51 @@
+image: docker:latest
+
+services:
+  - docker:dind
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+
+stages:
+  - test
+  - build
+  - deploy
+
+test:
+  stage: test
+  image: python:3.9-slim
+  before_script:
+    - pip install -r backend/requirements.txt
+  script:
+    - cd backend
+    - python manage.py test
+    - flake8 .
+    - black . --check
+
+build:
+  stage: build
+  script:
+    - docker-compose build
+  only:
+    - main
+    - develop
+
+deploy_staging:
+  stage: deploy
+  script:
+    - docker-compose up -d
+  environment:
+    name: staging
+  only:
+    - develop
+
+deploy_production:
+  stage: deploy
+  script:
+    - docker-compose -f docker-compose.prod.yml up -d
+  environment:
+    name: production
+  only:
+    - main
+  when: manual 

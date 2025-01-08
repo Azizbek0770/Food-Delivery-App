@@ -1,8 +1,21 @@
 from django.urls import path
-from .views import RestaurantListCreateView, MenuItemListCreateView, MenuItemDetailView
+from . import views
 
 urlpatterns = [
-    path('restaurants/', RestaurantListCreateView.as_view(), name='restaurant-list'),
-    path('menu-items/', MenuItemListCreateView.as_view(), name='menu-item-list'),
-    path('menu-items/<int:pk>/', MenuItemDetailView.as_view(), name='menu-item-detail'),
+    path('', views.RestaurantViewSet.as_view({
+        'get': 'list',
+        'post': 'create'
+    })),
+    path('<int:pk>/', views.RestaurantViewSet.as_view({
+        'get': 'retrieve',
+        'put': 'update',
+        'delete': 'destroy'
+    })),
+    path('<int:pk>/menu/', views.RestaurantViewSet.as_view({
+        'get': 'menu'
+    })),
+    path('<int:pk>/reviews/', views.RestaurantViewSet.as_view({
+        'get': 'reviews',
+        'post': 'add_review'
+    })),
 ]
