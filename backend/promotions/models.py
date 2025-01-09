@@ -1,5 +1,5 @@
 from django.db import models
-from restaurants.models import Restaurant, MenuItem
+from restaurants.models import Restaurant, Product
 from users.models import User
 
 class Promotion(models.Model):
@@ -21,6 +21,10 @@ class Promotion(models.Model):
     usage_limit = models.IntegerField(null=True)
     used_count = models.IntegerField(default=0)
     restaurants = models.ManyToManyField(Restaurant, blank=True)
+    items = models.ManyToManyField(
+        Product,
+        related_name='promotions'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

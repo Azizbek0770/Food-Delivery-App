@@ -22,12 +22,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'your-secret-key'
+SECRET_KEY = 'bc84+_#0&@*kiv1asw1q1^^a=egkq1n8n0fc5+4$@zriz3%ql%'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
 # Application definition
@@ -48,7 +48,14 @@ INSTALLED_APPS = [
     'channels_redis',
     'channels',
     'drf_yasg',
-    
+    'django_filters',
+    'psycopg2',
+    'django_extensions',
+    'django_countries',
+    'django_countries_plus',
+    'django_q',
+    'django_celery_results',
+    'django_celery_beat',
     
     # Local apps
     'users',
@@ -58,6 +65,7 @@ INSTALLED_APPS = [
     'notifications',
     'payments',
     'promotions',
+    'core',
 ]
 
 SWAGGER_SETTINGS = {
@@ -167,9 +175,9 @@ AUTH_USER_MODEL = 'users.User'
 
 # REST Framework settings
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
+    'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
+    ],
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),

@@ -1,6 +1,6 @@
 from django.db import models
 from users.models import User, Address
-from restaurants.models import Restaurant, MenuItem
+from restaurants.models import Restaurant, Product
 
 class Order(models.Model):
     STATUS_CHOICES = (
@@ -30,13 +30,17 @@ class Order(models.Model):
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    items = models.ManyToManyField(
+        Product,
+        through='OrderItem'
+    )
     
     class Meta:
         ordering = ['-created_at']
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
-    menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
+    menu_item = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     notes = models.TextField(blank=True)
