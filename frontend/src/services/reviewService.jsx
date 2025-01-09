@@ -1,4 +1,4 @@
-import api from '../utils/axios';
+import api from '../utils/api';
 
 export const getReviews = async (restaurantId) => {
   const response = await api.get(`/restaurants/reviews/`, {

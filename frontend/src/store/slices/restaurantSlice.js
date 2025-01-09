@@ -1,128 +1,80 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import restaurantApi from '../../services/restaurantApi';
+import { api } from '../../utils/api';
 
-// Async actions
-export const fetchRestaurantDashboard = createAsyncThunk(
-  'restaurant/fetchDashboard',
-  async (restaurantId, { rejectWithValue }) => {
-    try {
-      const response = await restaurantApi.getDashboard(restaurantId);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response.data);
-    }
+export const fetchRestaurants = createAsyncThunk(
+  'restaurants/fetchRestaurants',
+  async (filters) => {
+    const response = await api.get('/restaurants', { params: filters });
+    return response.data;
   }
 );
 
-export const fetchCategories = createAsyncThunk(
-  'restaurant/fetchCategories',
-  async (restaurantId, { rejectWithValue }) => {
-    try {
-      const response = await restaurantApi.getCategories(restaurantId);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response.data);
-    }
+export const fetchRestaurantDetails = createAsyncThunk(
+  'restaurants/fetchRestaurantDetails',
+  async (id) => {
+    const response = await api.get(`/restaurants/${id}`);
+    return response.data;
   }
 );
 
-export const fetchProducts = createAsyncThunk(
-  'restaurant/fetchProducts',
-  async (restaurantId, { rejectWithValue }) => {
-    try {
-      const response = await restaurantApi.getProducts(restaurantId);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response.data);
-    }
-  }
-);
-
-export const updateProduct = createAsyncThunk(
-  'restaurant/updateProduct',
-  async ({ restaurantId, productId, data }, { rejectWithValue }) => {
-    try {
-      const response = await restaurantApi.updateProduct(restaurantId, productId, data);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response.data);
-    }
-  }
-);
-
-export const toggleRestaurantStatus = createAsyncThunk(
-  'restaurant/toggleStatus',
-  async (restaurantId, { rejectWithValue }) => {
-    try {
-      const response = await restaurantApi.toggleStatus(restaurantId);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response.data);
-    }
+export const updateRestaurant = createAsyncThunk(
+  'restaurants/updateRestaurant',
+  async ({ id, data }) => {
+    const response = await api.put(`/restaurants/${id}`, data);
+    return response.data;
   }
 );
 
 const restaurantSlice = createSlice({
-  name: 'restaurant',
+  name: 'restaurants',
   initialState: {
-    dashboard: null,
-    categories: [],
-    products: [],
-    workingHours: [],
-    reviews: [],
+    items: [],
+    currentRestaurant: null,
     loading: false,
     error: null,
+    filters: {
+      category: 'all',
+      rating: 0,
+      priceRange: 'all',
+      search: '',
+    },
   },
   reducers: {
-    updateProductAvailability(state, action) {
-      const { productId, isAvailable } = action.payload;
-      const product = state.products.find(p => p.id === productId);
-      if (product) {
-        product.is_available = isAvailable;
-      }
+    setFilters: (state, action) => {
+      state.filters = { ...state.filters, ...action.payload };
     },
-    updateCategory(state, action) {
-      const updatedCategory = action.payload;
-      const index = state.categories.findIndex(c => c.id === updatedCategory.id);
-      if (index !== -1) {
-        state.categories[index] = updatedCategory;
-      }
+    clearError: (state) => {
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
     builder
-      // Dashboard
-      .addCase(fetchRestaurantDashboard.pending, (state) => {
+      .addCase(fetchRestaurants.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchRestaurantDashboard.fulfilled, (state, action) => {
+      .addCase(fetchRestaurants.fulfilled, (state, action) => {
         state.loading = false;
-        state.dashboard = action.payload;
+        state.items = action.payload;
       })
-      .addCase(fetchRestaurantDashboard.rejected, (state, action) => {
+      .addCase(fetchRestaurants.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.error = action.error.message;
       })
-      
-      // Categories
-      .addCase(fetchCategories.fulfilled, (state, action) => {
-        state.categories = action.payload;
+      .addCase(fetchRestaurantDetails.pending, (state) => {
+        state.loading = true;
+        state.error = null;
       })
-      
-      // Products
-      .addCase(fetchProducts.fulfilled, (state, action) => {
-        state.products = action.payload;
+      .addCase(fetchRestaurantDetails.fulfilled, (state, action) => {
+        state.loading = false;
+        state.currentRestaurant = action.payload;
       })
-      .addCase(updateProduct.fulfilled, (state, action) => {
-        const index = state.products.findIndex(p => p.id === action.payload.id);
-        if (index !== -1) {
-          state.products[index] = action.payload;
-        }
+      .addCase(fetchRestaurantDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
       });
   },
 });
 
-export const { updateProductAvailability, updateCategory } = restaurantSlice.actions;
-
+export const { setFilters, clearError } = restaurantSlice.actions;
 export default restaurantSlice.reducer;

@@ -3,11 +3,17 @@ export const validateEmail = (email) => {
   return re.test(email);
 };
 
+export const validatePassword = (password) => {
+  // Minimum 8 ta belgi, kamida 1 ta raqam va 1 ta maxsus belgi
+  const re = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+  return re.test(password);
+};
+
 export const validatePhone = (phone) => {
-  const re = /^\+?[1-9]\d{1,14}$/;
+  const re = /^\+998\d{9}$/;
   return re.test(phone);
 };
 
-export const validatePassword = (password) => {
-  return password.length >= 8;
-}; 
+export const validateRequired = (value) => {
+  return value !== null && value !== undefined && value.toString().trim() !== '';
+};
